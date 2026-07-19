@@ -188,3 +188,38 @@ The client must defensively strip a leading/trailing ` ```json ` fence before
 - `fetch` directly to `https://api.anthropic.com/v1/messages` with
   `model: "claude-sonnet-4-6"`, `max_tokens: 1000`, no API key handling
   (handled by the host environment).
+
+
+
+  # Signal Vault
+
+A personal tool for turning raw audio recordings into a written essence,
+action items, and flagged business opportunities — without needing full
+transcription.
+
+## Repo structure
+
+```
+signal-vault/
+├── README.md
+├── prompts/
+│   └── master-prompt.md     ← the full spec/prompt this app was built from
+└── src/
+    └── signal-vault.html    ← the app itself (single self-contained file)
+```
+
+## Using this repo
+
+- **`prompts/master-prompt.md`** is the living spec. Update it whenever the
+  product direction changes, so the prompt and the code never drift apart.
+  It's written so it can be pasted into a fresh chat with any AI coding
+  assistant to regenerate or extend the app from scratch.
+- **`src/signal-vault.html`** is the current, working build. Open it directly
+  in a browser — no build step, no dependencies to install.
+
+## Suggested workflow going forward
+
+1. Make a change → update `master-prompt.md` first if it's a product-level
+   change (new feature, changed constraint, changed design direction).
+2. Update `src/signal-vault.html` to match.
+3. Commit both together so the prompt and the code stay in sync as history.
