@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal Vault</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Sora:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root{
+  --bg: #170D14;
+  --surface: #241621;
+  --surface-2: #331D2C;
+  --border: rgba(255,196,178,0.12);
+  --text: #FDEDE7;
+  --muted: #C09AA5;
+  --orange: #FF7A45;
+  --orange-dim: rgba(255,122,69,0.16);
+  --pink: #FF3E7F;
+  --pink-dim: rgba(255,62,127,0.16);
+  --peach: #FFB877;
+  --peach-dim: rgba(255,184,119,0.18);
+  --gradient: linear-gradient(135deg, var(--orange), var(--pink));
+  --radius: 16px;
+}
+
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  background: var(--bg);
+  color: var(--text);
+  font-family:'Sora', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+}
+
+.app{
+  width:100%;
+  max-width:520px;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  position:relative;
+  background:
+    radial-gradient(ellipse 700px 380px at 50% -12%, rgba(255,62,127,0.16), transparent 60%),
+    radial-gradient(ellipse 500px 300px at 100% 10%, rgba(255,122,69,0.10), transparent 60%),
+    var(--bg);
+}
+
+.topbar{
+  display:flex; align-items:baseline; justify-content:space-between;
+  padding:26px 22px 16px;
+}
+.brand{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-style:italic;
+  font-size:26px;
+  letter-spacing:-0.01em;
+  background: var(--gradient);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  display:inline-block;
+}
+.tagline{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px;
+  color:var(--muted);
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  margin-top:4px;
+}
+
+.view{ flex:1; padding:8px 22px 108px; display:none; animation: fadein 0.3s ease; }
+.view.active{ display:block; }
+@keyframes fadein{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+.bottomnav{
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:520px;
+  display:flex;
+  background:rgba(23,13,20,0.9);
+  backdrop-filter: blur(14px);
+  border-top:1px solid var(--border);
+  padding:11px 12px calc(11px + env(safe-area-inset-bottom));
+  gap:6px;
+  z-index:50;
+}
+.navbtn{
+  flex:1;
+  display:flex; flex-direction:column; align-items:center; gap:5px;
+  background:none; border:none; color:var(--muted);
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase;
+  padding:9px 4px; border-radius:12px; cursor:pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.navbtn svg{ width:21px; height:21px; }
+.navbtn.active{ color:var(--orange); background:var(--orange-dim); }
+.navbtn:hover{ color:var(--text); }
+.navbtn.active:hover{ color:var(--orange); }
+
+.section-title{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:32px;
+  letter-spacing:-0.015em;
+  margin:16px 0 6px;
+}
+.section-sub{
+  color:var(--muted);
+  font-size:14.5px;
+  line-height:1.55;
+  margin-bottom:26px;
+}
+
+.dropzone{
+  border:1.5px dashed var(--border);
+  border-radius:var(--radius);
+  padding:44px 22px;
+  text-align:center;
+  cursor:pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+  background: var(--surface);
+}
+.dropzone:hover, .dropzone.dragover{
+  border-color: var(--orange);
+  background: var(--orange-dim);
+  transform: translateY(-1px);
+}
+.dropzone .icon{ font-size:30px; margin-bottom:12px; }
+.dropzone .primary{ font-weight:600; font-size:16px; margin-bottom:5px; }
+.dropzone .secondary{ color:var(--muted); font-size:13px; }
+input[type="file"]{ display:none; }
+
+.rec-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:22px 20px;
+  margin-top:20px;
+}
+.rec-meta{
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:18px;
+  gap:10px;
+}
+.rec-name{
+  font-size:14px; font-weight:600;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:250px;
+}
+.rec-duration{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:12.5px; color:var(--peach);
+  white-space:nowrap;
+}
+
+.waveform-wrap{
+  position:relative;
+  height:70px;
+  margin:10px 0 16px;
+  cursor:pointer;
+}
+.waveform{
+  display:flex; align-items:center; gap:2px; height:100%;
+}
+.bar{
+  flex:1;
+  background: var(--surface-2);
+  border-radius:2px;
+  min-height:3px;
+  transition: opacity 0.15s ease;
+}
+.bar.played{ background: var(--gradient); }
+.progress-line{
+  position:absolute; top:0; bottom:0; width:2px;
+  background:var(--text);
+  box-shadow:0 0 10px var(--pink);
+  pointer-events:none;
+}
+.tag-marker{
+  position:absolute; top:-5px; width:9px; height:9px; border-radius:50%;
+  background: var(--peach);
+  box-shadow:0 0 8px var(--peach);
+  transform:translateX(-50%);
+  cursor:pointer;
+  border:1.5px solid var(--bg);
+}
+.tag-marker.filled{ background:var(--pink); box-shadow:0 0 8px var(--pink); }
+
+.controls{
+  display:flex; align-items:center; justify-content:center; gap:16px;
+  margin:16px 0 8px;
+}
+.ctrl-btn{
+  background:var(--surface-2); border:1px solid var(--border); color:var(--text);
+  width:44px; height:44px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:12.5px; font-family:'IBM Plex Mono', monospace;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.ctrl-btn:hover{ background:#412a38; }
+.ctrl-btn:active{ transform:scale(0.94); }
+.play-btn{
+  width:60px; height:60px;
+  background:var(--gradient); border:none; color:#170D14; font-size:19px;
+  box-shadow:0 4px 20px rgba(255,62,127,0.35);
+}
+.play-btn:hover{ filter:brightness(1.08); }
+.speed-row{
+  display:flex; justify-content:center; gap:8px; margin:16px 0 4px;
+}
+.speed-pill{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:12px;
+  padding:7px 13px;
+  border-radius:20px;
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  transition: all 0.15s ease;
+}
+.speed-pill.active{ background:var(--gradient); color:#170D14; border-color:transparent; font-weight:600; }
+
+.suggest-btn{
+  width:100%;
+  margin-top:18px;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  color:var(--peach);
+  border-radius:12px;
+  padding:13px;
+  font-size:13.5px;
+  font-weight:600;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.suggest-btn:hover{ background:var(--peach-dim); border-color:var(--peach); }
+.suggest-btn:disabled{ opacity:0.45; cursor:not-allowed; }
+
+.tag-capture{
+  display:flex; gap:8px; margin-top:20px;
+}
+.tag-input{
+  flex:1;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:11px;
+  padding:13px 15px;
+  color:var(--text);
+  font-size:14.5px;
+  font-family:'Sora', sans-serif;
+}
+.tag-input:focus{ outline:none; border-color:var(--pink); }
+.tag-add{
+  background: var(--gradient); color:#170D14; border:none;
+  border-radius:11px; padding:0 20px; font-weight:700; font-size:14px;
+  cursor:pointer;
+}
+.tag-add:hover{ filter:brightness(1.08); }
+.tag-add:disabled{ opacity:0.4; cursor:not-allowed; }
+
+.tag-list{ margin-top:12px; display:flex; flex-direction:column; gap:7px; }
+.tag-chip{
+  display:flex; align-items:center; gap:11px;
+  background:var(--surface-2);
+  border-radius:11px;
+  padding:10px 13px;
+  font-size:13.5px;
+  border-left:2.5px solid var(--peach);
+}
+.tag-chip.filled{ border-left-color:var(--pink); }
+.tag-chip .t{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11.5px; color:var(--peach); min-width:40px; cursor:pointer;
+}
+.tag-chip .txt{
+  flex:1; outline:none; min-height:18px;
+}
+.tag-chip .txt:empty:before{
+  content: attr(data-placeholder);
+  color: var(--muted);
+}
+.tag-chip .del{
+  color:var(--muted); cursor:pointer; font-size:16px; line-height:1;
+  padding:2px 4px;
+}
+.tag-chip .del:hover{ color:var(--pink); }
+
+.notes-area{
+  width:100%;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:11px;
+  padding:13px 15px;
+  color:var(--text);
+  font-size:14px;
+  font-family:'Sora', sans-serif;
+  resize:vertical;
+  min-height:64px;
+  margin-top:10px;
+}
+.notes-area:focus{ outline:none; border-color:var(--pink); }
+.field-label{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em;
+  margin-top:20px; margin-bottom:8px; display:block;
+}
+
+.process-btn{
+  width:100%;
+  background: var(--gradient);
+  color:#170D14;
+  border:none;
+  border-radius:13px;
+  padding:16px;
+  font-weight:700;
+  font-size:15px;
+  margin-top:22px;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:9px;
+  transition: filter 0.15s ease, transform 0.1s ease;
+  box-shadow:0 6px 24px rgba(255,62,127,0.28);
+}
+.process-btn:hover{ filter:brightness(1.06); }
+.process-btn:disabled{ opacity:0.5; cursor:not-allowed; box-shadow:none; }
+.process-btn:active:not(:disabled){ transform:scale(0.98); }
+
+.spinner{
+  width:16px; height:16px; border-radius:50%;
+  border:2px solid rgba(23,13,20,0.3); border-top-color:#170D14;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin{ to{ transform:rotate(360deg); } }
+
+.error-msg{
+  background: var(--pink-dim);
+  border:1px solid rgba(255,62,127,0.35);
+  color:#ffb3ce;
+  border-radius:11px;
+  padding:13px 15px;
+  font-size:13px;
+  margin-top:15px;
+  line-height:1.55;
+}
+
+.searchbar{
+  display:flex; align-items:center; gap:9px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:13px;
+  padding:12px 15px;
+  margin-bottom:20px;
+}
+.searchbar input{
+  flex:1; background:none; border:none; color:var(--text); font-size:14.5px;
+  font-family:'Sora', sans-serif;
+}
+.searchbar input:focus{ outline:none; }
+.searchbar .icon{ color:var(--muted); }
+
+.rec-list{ display:flex; flex-direction:column; gap:13px; }
+.list-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:18px 20px;
+  cursor:pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+.list-card:hover{ border-color:rgba(255,122,69,0.4); background:var(--surface-2); transform:translateY(-1px); }
+.list-top{
+  display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+}
+.list-date{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em;
+}
+.idea-badge{
+  background: var(--gradient); color:#170D14;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10.5px; font-weight:700;
+  padding:5px 10px; border-radius:20px; white-space:nowrap;
+}
+.list-summary{
+  font-family:'Fraunces', serif;
+  font-size:16px; font-weight:500; line-height:1.5; margin-top:10px; color:var(--text);
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.list-tags{ display:flex; gap:6px; margin-top:11px; flex-wrap:wrap; }
+.mini-tag{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10.5px; color:var(--peach);
+  background:var(--surface-2);
+  padding:4px 9px; border-radius:7px;
+}
+
+.detail-overlay{
+  position:fixed; inset:0; background:rgba(10,5,8,0.7);
+  display:none; align-items:flex-end; justify-content:center; z-index:100;
+  backdrop-filter: blur(4px);
+}
+.detail-overlay.active{ display:flex; }
+.detail-sheet{
+  width:100%; max-width:520px; max-height:88vh; overflow-y:auto;
+  background:var(--surface);
+  border-radius:26px 26px 0 0;
+  padding:24px 22px 44px;
+  animation: slideup 0.28s ease;
+  border-top:1px solid var(--border);
+}
+@keyframes slideup{ from{ transform:translateY(34px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
+.detail-close{
+  width:38px; height:4px; background:var(--border); border-radius:4px;
+  margin:0 auto 20px; cursor:pointer;
+}
+.detail-date{
+  font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--muted);
+  text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;
+}
+.detail-summary{
+  font-family:'Fraunces', serif; font-style:italic; font-size:21px; font-weight:500; line-height:1.45;
+  margin-bottom:22px;
+}
+.detail-h{
+  font-family:'IBM Plex Mono', monospace; font-size:11.5px;
+  background: var(--gradient); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  text-transform:uppercase; letter-spacing:0.07em; margin:22px 0 12px; font-weight:600;
+}
+.action-item{
+  font-size:14px; padding:10px 0; border-bottom:1px solid var(--border);
+  display:flex; gap:11px;
+}
+.action-item:before{ content:"—"; color:var(--peach); }
+.idea-card{
+  background:var(--surface-2); border-radius:13px; padding:16px 17px; margin-bottom:11px;
+  border-left:3px solid var(--orange);
+}
+.idea-card.medium{ border-left-color:var(--pink); }
+.idea-card.low{ border-left-color:var(--muted); }
+.idea-title{ font-family:'Fraunces', serif; font-weight:600; font-size:16px; margin-bottom:7px; }
+.idea-pain{ font-size:13px; color:var(--muted); margin-bottom:7px; line-height:1.55; }
+.idea-opp{ font-size:13.5px; line-height:1.55; }
+.idea-conf{
+  display:inline-block; margin-top:9px;
+  font-family:'IBM Plex Mono', monospace; font-size:10px; text-transform:uppercase;
+  letter-spacing:0.05em; color:var(--orange); background:var(--orange-dim);
+  padding:4px 9px; border-radius:7px;
+}
+.idea-card.medium .idea-conf{ color:var(--pink); background:var(--pink-dim); }
+.idea-card.low .idea-conf{ color:var(--muted); background:var(--surface); }
+.delete-rec{
+  width:100%; margin-top:24px; background:none; border:1px solid rgba(255,62,127,0.28);
+  color:#ffb3ce; padding:13px; border-radius:11px; font-size:13.5px; cursor:pointer;
+}
+.delete-rec:hover{ background:rgba(255,62,127,0.08); }
+
+.feed-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:18px 20px;
+  margin-bottom:13px;
+  border-left:3px solid var(--orange);
+}
+.feed-card.medium{ border-left-color:var(--pink); }
+.feed-card.low{ border-left-color:var(--muted); }
+.feed-source{
+  font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted);
+  margin-top:11px;
+}
+
+.empty{
+  text-align:center; padding:64px 20px; color:var(--muted);
+}
+.empty .icon{ font-size:34px; margin-bottom:16px; opacity:0.7; }
+.empty .msg{ font-size:14.5px; line-height:1.65; max-width:280px; margin:0 auto; }
+
+.hidden{ display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="topbar">
+    <div>
+      <div class="brand">Signal Vault</div>
+      <div class="tagline">Raw audio, into essence and signal</div>
+    </div>
+  </div>
+
+  <div class="view active" id="view-capture">
+    <div class="section-title">Capture</div>
+    <div class="section-sub">Drop in a recording. Skim the essence, tag the moments that matter, let it write the story and find the opportunity for you.</div>
+
+    <div class="dropzone" id="dropzone">
+      <div class="icon">◎</div>
+      <div class="primary">Add a recording</div>
+      <div class="secondary">MP3, MP4, M4A, WAV, AAC — tap to browse or drag a file here</div>
+    </div>
+    <input type="file" id="fileInput" accept="audio/*,video/mp4,audio/mp4,audio/x-m4a,audio/mpeg,.mp3,.mp4,.m4a,.wav,.aac,.ogg,.webm,.mov">
+
+    <div class="rec-card hidden" id="recCard">
+      <div class="rec-meta">
+        <div class="rec-name" id="recName">—</div>
+        <div class="rec-duration" id="recDuration">reading…</div>
+      </div>
+
+      <div class="waveform-wrap" id="waveformWrap">
+        <div class="waveform" id="waveform"></div>
+        <div class="progress-line" id="progressLine" style="left:0%"></div>
+      </div>
+
+      <div class="controls">
+        <button class="ctrl-btn" id="skipBack">−10</button>
+        <button class="ctrl-btn play-btn" id="playBtn">▶</button>
+        <button class="ctrl-btn" id="skipFwd">+10</button>
+      </div>
+
+      <div class="speed-row">
+        <button class="speed-pill" data-speed="1">1×</button>
+        <button class="speed-pill" data-speed="1.5">1.5×</button>
+        <button class="speed-pill active" data-speed="2">2×</button>
+        <button class="speed-pill" data-speed="3">3×</button>
+      </div>
+
+      <button class="suggest-btn" id="suggestBtn">✺ Suggest moments to tag</button>
+
+      <span class="field-label">Tag a moment (at current timestamp)</span>
+      <div class="tag-capture">
+        <input type="text" class="tag-input" id="tagInput" placeholder="e.g. pricing idea, follow up Raj...">
+        <button class="tag-add" id="tagAddBtn">+ Tag</button>
+      </div>
+      <div class="tag-list" id="tagList"></div>
+
+      <span class="field-label">Overall notes (optional, if you'd rather skip tagging)</span>
+      <textarea class="notes-area" id="notesArea" placeholder="Quick context about this recording..."></textarea>
+
+      <button class="process-btn" id="processBtn">
+        <span id="processBtnText">Extract the essence</span>
+      </button>
+      <div class="error-msg hidden" id="errorMsg"></div>
+    </div>
+  </div>
+
+  <div class="view" id="view-vault">
+    <div class="section-title">Vault</div>
+    <div class="section-sub">Every processed recording, permanently kept — the story and the business signal, no re-listening required.</div>
+
+    <div class="searchbar">
+      <span class="icon">⌕</span>
+      <input type="text" id="vaultSearch" placeholder="Search stories, tags...">
+    </div>
+
+    <div class="rec-list" id="vaultList"></div>
+    <div class="empty hidden" id="vaultEmpty">
+      <div class="icon">◎</div>
+      <div class="msg">Nothing in the vault yet. Process a recording from the Capture tab and it'll show up here.</div>
+    </div>
+  </div>
+
+  <div class="view" id="view-ideas">
+    <div class="section-title">Idea Bank</div>
+    <div class="section-sub">Every business opportunity flagged across every recording, in one running feed. Patterns live here.</div>
+
+    <div class="rec-list" id="ideaFeed"></div>
+    <div class="empty hidden" id="ideaEmpty">
+      <div class="icon">✺</div>
+      <div class="msg">No opportunities captured yet. They'll appear here the moment a recording gets processed with a business idea in it.</div>
+    </div>
+  </div>
+
+  <div class="bottomnav">
+    <button class="navbtn active" data-view="capture">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5" fill="currentColor"/></svg>
+      Capture
+    </button>
+    <button class="navbtn" data-view="vault">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>
+      Vault
+    </button>
+    <button class="navbtn" data-view="ideas">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.6.6 1 1.3 1 2.5h6c0-1.2.4-1.9 1-2.5A6 6 0 0 0 12 3z"/></svg>
+      Ideas
+    </button>
+  </div>
+</div>
+
+<div class="detail-overlay" id="detailOverlay">
+  <div class="detail-sheet" id="detailSheet"></div>
+</div>
+
+<script>
+(function(){
+  var recordings = [];
+  var currentFile = null;
+  var currentAudioEl = null;
+  var currentDuration = 0;
+  var currentTags = [];
+  var waveformBars = [];
+  var tagIdCounter = 0;
+  var durationResolveAttempted = false;
+
+  function loadRecordings(){
+    window.storage.get('recordings', false).then(function(res){
+      recordings = res && res.value ? JSON.parse(res.value) : [];
+      renderVault();
+      renderIdeaBank();
+    }).catch(function(){
+      recordings = [];
+      renderVault();
+      renderIdeaBank();
+    });
+  }
+
+  function saveRecordings(){
+    return window.storage.set('recordings', JSON.stringify(recordings), false).catch(function(e){
+      console.error('Storage save failed', e);
+    });
+  }
+
+  var navBtns = document.querySelectorAll('.navbtn');
+  for(var n=0;n<navBtns.length;n++){
+    navBtns[n].addEventListener('click', function(){
+      var btn = this;
+      document.querySelectorAll('.navbtn').forEach(function(b){ b.classList.remove('active'); });
+      document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('view-'+btn.dataset.view).classList.add('active');
+    });
+  }
+
+  var dropzone = document.getElementById('dropzone');
+  var fileInput = document.getElementById('fileInput');
+  dropzone.addEventListener('click', function(){ fileInput.click(); });
+  dropzone.addEventListener('dragover', function(e){ e.preventDefault(); dropzone.classList.add('dragover'); });
+  dropzone.addEventListener('dragleave', function(){ dropzone.classList.remove('dragover'); });
+  dropzone.addEventListener('drop', function(e){
+    e.preventDefault(); dropzone.classList.remove('dragover');
+    if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', function(e){
+    if(e.target.files.length) handleFile(e.target.files[0]);
+  });
+
+  function handleFile(file){
+    currentFile = file;
+    currentTags = [];
+    durationResolveAttempted = false;
+    document.getElementById('tagList').innerHTML = '';
+    document.getElementById('notesArea').value = '';
+    document.getElementById('errorMsg').classList.add('hidden');
+    document.getElementById('recName').textContent = file.name;
+    document.getElementById('recDuration').textContent = 'reading…';
+    document.getElementById('recCard').classList.remove('hidden');
+    currentDuration = 0;
+
+    if(currentAudioEl){ currentAudioEl.pause(); }
+    var url = URL.createObjectURL(file);
+    currentAudioEl = new Audio();
+    currentAudioEl.preload = 'metadata';
+    currentAudioEl.src = url;
+    currentAudioEl.playbackRate = 2;
+
+    currentAudioEl.addEventListener('loadedmetadata', resolveDuration);
+    currentAudioEl.addEventListener('durationchange', resolveDuration);
+    currentAudioEl.addEventListener('timeupdate', updateProgress);
+    currentAudioEl.addEventListener('ended', function(){
+      document.getElementById('playBtn').textContent = '▶';
+    });
+    currentAudioEl.addEventListener('error', function(){
+      document.getElementById('recDuration').textContent = '--:--';
+      showError('This file could not be loaded for playback by the browser directly. The waveform and business processing will still work off the notes and tags you add below.');
+    });
+
+    var wf = document.getElementById('waveform');
+    wf.innerHTML = '<div style="width:100%;text-align:center;color:var(--muted);font-size:11.5px;font-family:IBM Plex Mono, monospace;padding:24px 0;">reading waveform…</div>';
+
+    file.arrayBuffer().then(function(arrayBuffer){
+      var AudioCtx = window.AudioContext || window.webkitAudioContext;
+      var ctx = new AudioCtx();
+      return ctx.decodeAudioData(arrayBuffer.slice(0)).then(function(audioBuffer){
+        waveformBars = computeWaveform(audioBuffer, 72);
+        if(!currentDuration || !isFinite(currentDuration) || currentDuration <= 0){
+          currentDuration = audioBuffer.duration;
+          document.getElementById('recDuration').textContent = formatTime(currentDuration);
+        }
+        renderWaveform();
+        ctx.close();
+      });
+    }).catch(function(err){
+      waveformBars = new Array(72).fill(0.3);
+      renderWaveform();
+    });
+  }
+
+  function resolveDuration(){
+    if(!currentAudioEl) return;
+    var d = currentAudioEl.duration;
+    if(d && isFinite(d) && d > 0){
+      currentDuration = d;
+      document.getElementById('recDuration').textContent = formatTime(currentDuration);
+      renderTagMarkers();
+      return;
+    }
+    if(!durationResolveAttempted){
+      durationResolveAttempted = true;
+      currentAudioEl.currentTime = 1e101;
+      var onTU = function(){
+        currentAudioEl.removeEventListener('timeupdate', onTU);
+        currentAudioEl.currentTime = 0;
+        var d2 = currentAudioEl.duration;
+        if(d2 && isFinite(d2) && d2 > 0){
+          currentDuration = d2;
+          document.getElementById('recDuration').textContent = formatTime(currentDuration);
+          renderTagMarkers();
+        }
+      };
+      currentAudioEl.addEventListener('timeupdate', onTU);
+    }
+  }
+
+  function computeWaveform(audioBuffer, numBars){
+    var data = audioBuffer.getChannelData(0);
+    var blockSize = Math.max(1, Math.floor(data.length / numBars));
+    var bars = [];
+    for(var i=0;i<numBars;i++){
+      var sum = 0;
+      var start = i * blockSize;
+      var end = Math.min(start + blockSize, data.length);
+      for(var j=start;j<end;j++){ sum += Math.abs(data[j]); }
+      bars.push(sum / (end - start || 1));
+    }
+    var max = Math.max.apply(null, bars) || 1;
+    return bars.map(function(b){ return Math.max(0.06, b / max); });
+  }
+
+  function renderWaveform(){
+    var wf = document.getElementById('waveform');
+    wf.innerHTML = '';
+    waveformBars.forEach(function(h){
+      var bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.style.height = (h*100)+'%';
+      wf.appendChild(bar);
+    });
+    renderTagMarkers();
+  }
+
+  function renderTagMarkers(){
+    document.querySelectorAll('.tag-marker').forEach(function(el){ el.remove(); });
+    if(!currentDuration) return;
+    var wrap = document.getElementById('waveformWrap');
+    currentTags.forEach(function(tag){
+      var dot = document.createElement('div');
+      dot.className = 'tag-marker' + (tag.text ? ' filled' : '');
+      dot.style.left = ((tag.t / currentDuration) * 100) + '%';
+      dot.title = tag.text || 'untagged moment';
+      wrap.appendChild(dot);
+    });
+  }
+
+  function updateProgress(){
+    if(!currentDuration) return;
+    var pct = (currentAudioEl.currentTime / currentDuration) * 100;
+    document.getElementById('progressLine').style.left = pct + '%';
+    var bars = document.querySelectorAll('.bar');
+    var playedCount = Math.floor((pct/100) * bars.length);
+    bars.forEach(function(b,i){ b.classList.toggle('played', i < playedCount); });
+  }
+
+  function formatTime(s){
+    if(!isFinite(s) || s == null) return '00:00';
+    var m = Math.floor(s/60);
+    var sec = Math.floor(s%60);
+    return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+  }
+
+  document.getElementById('playBtn').addEventListener('click', function(){
+    if(!currentAudioEl) return;
+    if(currentAudioEl.paused){
+      currentAudioEl.play();
+      document.getElementById('playBtn').textContent = '❚❚';
+    }else{
+      currentAudioEl.pause();
+      document.getElementById('playBtn').textContent = '▶';
+    }
+  });
+  document.getElementById('skipBack').addEventListener('click', function(){
+    if(currentAudioEl) currentAudioEl.currentTime = Math.max(0, currentAudioEl.currentTime - 10);
+  });
+  document.getElementById('skipFwd').addEventListener('click', function(){
+    if(currentAudioEl) currentAudioEl.currentTime = Math.min(currentDuration, currentAudioEl.currentTime + 10);
+  });
+  document.querySelectorAll('.speed-pill').forEach(function(pill){
+    pill.addEventListener('click', function(){
+      document.querySelectorAll('.speed-pill').forEach(function(p){ p.classList.remove('active'); });
+      pill.classList.add('active');
+      if(currentAudioEl) currentAudioEl.playbackRate = parseFloat(pill.dataset.speed);
+    });
+  });
+
+  document.getElementById('waveformWrap').addEventListener('click', function(e){
+    if(!currentAudioEl || !currentDuration) return;
+    var rect = e.currentTarget.getBoundingClientRect();
+    var pct = (e.clientX - rect.left) / rect.width;
+    currentAudioEl.currentTime = pct * currentDuration;
+  });
+
+  document.getElementById('suggestBtn').addEventListener('click', function(){
+    if(!waveformBars.length || !currentDuration){
+      showError('Load a recording and let the waveform finish reading first.');
+      return;
+    }
+    var moments = detectMoments(waveformBars, currentDuration, 7);
+    moments.forEach(function(t){
+      var tooClose = currentTags.some(function(tag){ return Math.abs(tag.t - t) < currentDuration * 0.03; });
+      if(!tooClose){
+        currentTags.push({ id: 'tag'+(tagIdCounter++), t: t, text: '' });
+      }
+    });
+    currentTags.sort(function(a,b){ return a.t - b.t; });
+    renderTagList();
+    renderTagMarkers();
+  });
+
+  function detectMoments(bars, duration, count){
+    var n = bars.length;
+    var mean = bars.reduce(function(a,b){ return a+b; }, 0) / n;
+    var candidates = [];
+    for(var i=1;i<n-1;i++){
+      if(bars[i] > mean * 1.08 && bars[i] >= bars[i-1] && bars[i] >= bars[i+1]){
+        candidates.push({ i: i, v: bars[i] });
+      }
+    }
+    candidates.sort(function(a,b){ return b.v - a.v; });
+    var minDist = Math.max(1, Math.floor(n / (count * 1.4)));
+    var chosen = [];
+    for(var c=0;c<candidates.length;c++){
+      var cand = candidates[c];
+      var ok = chosen.every(function(ch){ return Math.abs(ch.i - cand.i) >= minDist; });
+      if(ok) chosen.push(cand);
+      if(chosen.length >= count) break;
+    }
+    chosen.sort(function(a,b){ return a.i - b.i; });
+    return chosen.map(function(ch){ return (ch.i / n) * duration; });
+  }
+
+  function addTag(){
+    var input = document.getElementById('tagInput');
+    var text = input.value.trim();
+    if(!text || !currentAudioEl) return;
+    currentTags.push({ id: 'tag'+(tagIdCounter++), t: currentAudioEl.currentTime, text: text });
+    currentTags.sort(function(a,b){ return a.t - b.t; });
+    input.value = '';
+    renderTagList();
+    renderTagMarkers();
+  }
+  document.getElementById('tagAddBtn').addEventListener('click', addTag);
+  document.getElementById('tagInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); addTag(); }
+  });
+
+  function renderTagList(){
+    var list = document.getElementById('tagList');
+    list.innerHTML = '';
+    currentTags.forEach(function(tag, idx){
+      var chip = document.createElement('div');
+      chip.className = 'tag-chip' + (tag.text ? ' filled' : '');
+      var tSpan = document.createElement('span');
+      tSpan.className = 't';
+      tSpan.textContent = formatTime(tag.t);
+      tSpan.title = 'Click to jump here';
+      tSpan.addEventListener('click', function(){
+        if(currentAudioEl) currentAudioEl.currentTime = tag.t;
+      });
+
+      var txtSpan = document.createElement('span');
+      txtSpan.className = 'txt';
+      txtSpan.contentEditable = 'true';
+      txtSpan.setAttribute('data-placeholder', 'tap to describe this moment…');
+      txtSpan.textContent = tag.text || '';
+      txtSpan.addEventListener('blur', function(){
+        currentTags[idx].text = txtSpan.textContent.trim();
+        chip.classList.toggle('filled', !!currentTags[idx].text);
+        renderTagMarkers();
+      });
+      txtSpan.addEventListener('keydown', function(e){
+        if(e.key === 'Enter'){ e.preventDefault(); txtSpan.blur(); }
+      });
+
+      var delSpan = document.createElement('span');
+      delSpan.className = 'del';
+      delSpan.textContent = '✕';
+      delSpan.addEventListener('click', function(){
+        currentTags.splice(idx,1);
+        renderTagList();
+        renderTagMarkers();
+      });
+
+      chip.appendChild(tSpan);
+      chip.appendChild(txtSpan);
+      chip.appendChild(delSpan);
+      list.appendChild(chip);
+    });
+  }
+
+  document.getElementById('processBtn').addEventListener('click', processRecording);
+
+  function processRecording(){
+    var notes = document.getElementById('notesArea').value.trim();
+    var filledTags = currentTags.filter(function(t){ return t.text; });
+    if(filledTags.length === 0 && !notes){
+      showError('Add at least one tag while listening, or a quick note, so there is something to work from.');
+      return;
+    }
+    var btn = document.getElementById('processBtn');
+    var btnText = document.getElementById('processBtnText');
+    btn.disabled = true;
+    btnText.innerHTML = '<span class="spinner"></span>';
+    document.getElementById('errorMsg').classList.add('hidden');
+
+    var tagLines = filledTags.map(function(t){ return '[' + formatTime(t.t) + '] ' + t.text; }).join(String.fromCharCode(10));
+    var promptParts = [
+      'You are helping someone process a personal audio recording (a real-life conversation or voice memo) that they could not fully re-listen to. They skimmed it at high speed and dropped short fragments/keywords at key moments, plus optional free notes. Your job has three layers: (1) reconstruct a short story-like essence of what likely happened, (2) list concrete follow-up actions, (3) surface any business opportunity or pain point implied.',
+      'Recording duration: ' + formatTime(currentDuration),
+      'Timestamped fragments they tagged while listening:',
+      (tagLines || '(none, see notes instead)'),
+      'Additional notes from them:',
+      (notes || '(none)'),
+      'Return ONLY valid JSON, no markdown fences, no preamble, matching exactly this shape:',
+      '{"summary": "2-4 sentence story-like essence, written engagingly, not clinically", "action_items": ["short actionable follow-up"], "business_ideas": [{"title": "short punchy name", "pain_point": "the underlying problem implied", "opportunity": "the concrete business angle", "confidence": "high | medium | low"}], "tags": ["short-category"]}',
+      'If there is genuinely no business angle, return an empty array for business_ideas, do not force one. Keep action_items to at most 4. Keep tags to at most 4, lowercase, one or two words each.'
+    ];
+    var prompt = promptParts.join(String.fromCharCode(10) + String.fromCharCode(10));
+
+    fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    }).then(function(response){ return response.json(); })
+      .then(function(data){
+        var content = data.content || [];
+        var textBlock = null;
+        for(var k=0;k<content.length;k++){
+          if(content[k].type === 'text'){ textBlock = content[k]; break; }
+        }
+        if(!textBlock) throw new Error('No response content');
+        var clean = textBlock.text.trim().replace(/^```json\s*|```$/g, '').trim();
+        var parsed = JSON.parse(clean);
+
+        var record = {
+          id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()),
+          fileName: currentFile ? currentFile.name : 'recording',
+          duration: currentDuration,
+          processedAt: new Date().toISOString(),
+          tagsRaw: currentTags,
+          notes: notes,
+          summary: parsed.summary || '',
+          action_items: parsed.action_items || [],
+          business_ideas: parsed.business_ideas || [],
+          tags: parsed.tags || []
+        };
+        recordings.unshift(record);
+        return saveRecordings().then(function(){
+          renderVault();
+          renderIdeaBank();
+          resetCaptureForm();
+          document.querySelector('.navbtn[data-view="vault"]').click();
+          openDetail(record.id);
+        });
+      })
+      .catch(function(err){
+        showError('Processing failed, check your connection and try again. Your tags are still here, nothing was lost.');
+      })
+      .finally(function(){
+        btn.disabled = false;
+        btnText.textContent = 'Extract the essence';
+      });
+  }
+
+  function showError(msg){
+    var el = document.getElementById('errorMsg');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  function resetCaptureForm(){
+    currentFile = null;
+    currentTags = [];
+    if(currentAudioEl){ currentAudioEl.pause(); currentAudioEl = null; }
+    currentDuration = 0;
+    durationResolveAttempted = false;
+    document.getElementById('recCard').classList.add('hidden');
+    document.getElementById('fileInput').value = '';
+  }
+
+  function renderVault(filter){
+    var list = document.getElementById('vaultList');
+    var empty = document.getElementById('vaultEmpty');
+    list.innerHTML = '';
+    var items = recordings;
+    if(filter){
+      var f = filter.toLowerCase();
+      items = recordings.filter(function(r){
+        return (r.summary||'').toLowerCase().indexOf(f) !== -1 ||
+          (r.tags||[]).some(function(t){ return t.toLowerCase().indexOf(f) !== -1; }) ||
+          (r.fileName||'').toLowerCase().indexOf(f) !== -1;
+      });
+    }
+    if(items.length === 0){
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+    items.forEach(function(rec){
+      var card = document.createElement('div');
+      card.className = 'list-card';
+      var date = new Date(rec.processedAt);
+      var dateStr = date.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'});
+      card.innerHTML =
+        '<div class="list-top"><span class="list-date"></span></div>' +
+        '<div class="list-summary"></div>' +
+        '<div class="list-tags"></div>';
+      card.querySelector('.list-date').textContent = dateStr + ' \u00b7 ' + formatTime(rec.duration);
+      if(rec.business_ideas.length){
+        var badge = document.createElement('span');
+        badge.className = 'idea-badge';
+        badge.textContent = rec.business_ideas.length + ' idea' + (rec.business_ideas.length>1?'s':'');
+        card.querySelector('.list-top').appendChild(badge);
+      }
+      card.querySelector('.list-summary').textContent = rec.summary;
+      var tagsWrap = card.querySelector('.list-tags');
+      (rec.tags||[]).forEach(function(t){
+        var el = document.createElement('span');
+        el.className = 'mini-tag';
+        el.textContent = t;
+        tagsWrap.appendChild(el);
+      });
+      card.addEventListener('click', function(){ openDetail(rec.id); });
+      list.appendChild(card);
+    });
+  }
+
+  document.getElementById('vaultSearch').addEventListener('input', function(e){
+    renderVault(e.target.value);
+  });
+
+  function renderIdeaBank(){
+    var feed = document.getElementById('ideaFeed');
+    var empty = document.getElementById('ideaEmpty');
+    feed.innerHTML = '';
+    var allIdeas = [];
+    recordings.forEach(function(rec){
+      (rec.business_ideas||[]).forEach(function(idea){
+        var merged = {};
+        for(var key in idea){ merged[key] = idea[key]; }
+        merged.recId = rec.id;
+        merged.date = rec.processedAt;
+        merged.fileName = rec.fileName;
+        allIdeas.push(merged);
+      });
+    });
+    if(allIdeas.length === 0){
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+    allIdeas.sort(function(a,b){ return new Date(b.date) - new Date(a.date); });
+    allIdeas.forEach(function(idea){
+      var conf = (idea.confidence||'medium').toLowerCase();
+      var card = document.createElement('div');
+      card.className = 'feed-card ' + (conf === 'high' ? '' : conf);
+      var dateStr = new Date(idea.date).toLocaleDateString(undefined,{month:'short', day:'numeric'});
+      card.innerHTML =
+        '<div class="idea-title"></div><div class="idea-pain"></div><div class="idea-opp"></div><span class="idea-conf"></span><div class="feed-source"></div>';
+      card.querySelector('.idea-title').textContent = idea.title;
+      card.querySelector('.idea-pain').textContent = 'Pain point: ' + idea.pain_point;
+      card.querySelector('.idea-opp').textContent = idea.opportunity;
+      card.querySelector('.idea-conf').textContent = conf + ' confidence';
+      card.querySelector('.feed-source').textContent = 'from ' + dateStr;
+      card.addEventListener('click', function(){ openDetail(idea.recId); });
+      feed.appendChild(card);
+    });
+  }
+
+  function openDetail(id){
+    var rec = null;
+    for(var i=0;i<recordings.length;i++){ if(recordings[i].id === id){ rec = recordings[i]; break; } }
+    if(!rec) return;
+    var sheet = document.getElementById('detailSheet');
+    var date = new Date(rec.processedAt);
+    var dateStr = date.toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric', year:'numeric'});
+
+    sheet.innerHTML = '';
+    var closeBar = document.createElement('div');
+    closeBar.className = 'detail-close';
+    closeBar.id = 'detailClose';
+    sheet.appendChild(closeBar);
+
+    var dateDiv = document.createElement('div');
+    dateDiv.className = 'detail-date';
+    dateDiv.textContent = dateStr + ' \u00b7 ' + formatTime(rec.duration);
+    sheet.appendChild(dateDiv);
+
+    var summaryDiv = document.createElement('div');
+    summaryDiv.className = 'detail-summary';
+    summaryDiv.textContent = rec.summary;
+    sheet.appendChild(summaryDiv);
+
+    if(rec.action_items && rec.action_items.length){
+      var h1 = document.createElement('div');
+      h1.className = 'detail-h';
+      h1.textContent = 'Action items';
+      sheet.appendChild(h1);
+      rec.action_items.forEach(function(a){
+        var item = document.createElement('div');
+        item.className = 'action-item';
+        var span = document.createElement('span');
+        span.textContent = a;
+        item.appendChild(span);
+        sheet.appendChild(item);
+      });
+    }
+
+    if(rec.business_ideas && rec.business_ideas.length){
+      var h2 = document.createElement('div');
+      h2.className = 'detail-h';
+      h2.textContent = 'Business signal';
+      sheet.appendChild(h2);
+      rec.business_ideas.forEach(function(idea){
+        var conf = (idea.confidence||'medium').toLowerCase();
+        var c = document.createElement('div');
+        c.className = 'idea-card ' + (conf==='high'?'':conf);
+        var t = document.createElement('div'); t.className='idea-title'; t.textContent = idea.title;
+        var p = document.createElement('div'); p.className='idea-pain'; p.textContent = 'Pain point: ' + idea.pain_point;
+        var o = document.createElement('div'); o.className='idea-opp'; o.textContent = idea.opportunity;
+        var cf = document.createElement('span'); cf.className='idea-conf'; cf.textContent = conf + ' confidence';
+        c.appendChild(t); c.appendChild(p); c.appendChild(o); c.appendChild(cf);
+        sheet.appendChild(c);
+      });
+    }
+
+    if(rec.tags && rec.tags.length){
+      var tagsWrap = document.createElement('div');
+      tagsWrap.className = 'list-tags';
+      tagsWrap.style.marginTop = '18px';
+      rec.tags.forEach(function(t){
+        var el = document.createElement('span');
+        el.className = 'mini-tag';
+        el.textContent = t;
+        tagsWrap.appendChild(el);
+      });
+      sheet.appendChild(tagsWrap);
+    }
+
+    var delBtn = document.createElement('button');
+    delBtn.className = 'delete-rec';
+    delBtn.id = 'deleteRecBtn';
+    delBtn.textContent = 'Delete this recording';
+    sheet.appendChild(delBtn);
+
+    document.getElementById('detailClose').addEventListener('click', closeDetail);
+    delBtn.addEventListener('click', function(){
+      recordings = recordings.filter(function(r){ return r.id !== id; });
+      saveRecordings().then(function(){
+        renderVault();
+        renderIdeaBank();
+        closeDetail();
+      });
+    });
+
+    document.getElementById('detailOverlay').classList.add('active');
+  }
+  function closeDetail(){
+    document.getElementById('detailOverlay').classList.remove('active');
+  }
+  document.getElementById('detailOverlay').addEventListener('click', function(e){
+    if(e.target.id === 'detailOverlay') closeDetail();
+  });
+
+  loadRecordings();
+})();
+</script>
+</body>
+</html>
